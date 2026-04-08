@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getUserUsage, incrementUsage, getUserNotes, getNotesById } from '@/lib/firestore';
-import { hasApiKey } from '@/lib/firebase';
 
 export async function GET(request) {
   try {
@@ -11,22 +10,6 @@ export async function GET(request) {
 
     if (!uid) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-    }
-
-    if (!hasApiKey) {
-      // Mock Demo Data
-      if (action === 'history') return NextResponse.json({ notes: [] });
-      if (action === 'usage') return NextResponse.json({ usage: { videosProcessed: 0 } });
-      if (action === 'note') return NextResponse.json({ 
-        note: {
-          id: noteId || 'mock-id',
-          uid,
-          videoTitle: 'Demo Generated Note',
-          notes: `# Example Notes\n\n## Summary\nThis is a mock generation since no API keys are provided.\n\n## Key Concepts\n- Demo mode is active.\n- Please add FIREBASE and GEMINI keys to .env.local to enable real processing.`,
-          language: 'en'
-        }
-      });
-      return NextResponse.json({ usage: { videosProcessed: 0 } });
     }
 
     switch (action) {
@@ -48,7 +31,6 @@ export async function GET(request) {
         if (!note) {
           return NextResponse.json({ error: 'Note not found' }, { status: 404 });
         }
-        // Verify ownership
         if (note.uid !== uid) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
@@ -74,10 +56,6 @@ export async function POST(request) {
 
     if (!uid) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-    }
-
-    if (!hasApiKey) {
-      return NextResponse.json({ success: true, usage: { videosProcessed: 1 } });
     }
 
     await incrementUsage(uid);

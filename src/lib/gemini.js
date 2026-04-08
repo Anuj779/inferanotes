@@ -45,8 +45,7 @@ Translated notes:`;
 
 export async function generateNotes(transcript) {
   if (!hasGeminiKey || !model) {
-    console.warn('[Gemini Lib] API key missing. Returning MOCK notes.');
-    return `# Demo Output\n\n## Summary\nThis is a mock generation because the GEMINI_API_KEY is not configured in .env.local.\n\n## Key Concepts\n- Configure \`.env.local\` to enable real AI.\n- The pipeline successfully extracted the transcript!\n\n## Detailed Notes\n### Transcript Preview\nHere is a snippet of what was extracted:\n_${transcript.substring(0, 200)}..._`;
+    throw new Error('GEMINI_API_KEY is not configured. Please add it to your .env.local file.');
   }
 
   try {
@@ -62,8 +61,7 @@ export async function generateNotes(transcript) {
 
 export async function translateNotes(notes, language) {
   if (!hasGeminiKey || !model) {
-    console.warn('[Gemini Lib] API key missing. Bypassing translation.');
-    return notes;
+    throw new Error('GEMINI_API_KEY is not configured. Add it to .env.local file.');
   }
 
   const languageMap = {

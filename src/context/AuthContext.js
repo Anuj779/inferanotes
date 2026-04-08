@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { auth, googleProvider, hasApiKey } from '@/lib/firebase';
+import { auth, googleProvider } from '@/lib/firebase';
 import { createUser } from '@/lib/firestore';
 
 const AuthContext = createContext({});
@@ -12,24 +12,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!hasApiKey) {
-      if (localStorage.getItem('demo_user')) {
-        setUser({
-          uid: 'demo-12345',
-          email: 'student@demo.app',
-          displayName: 'Demo Student',
-          photoURL: '',
-          plan: 'free'
-        });
-      }
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        // Create/update user in Firestore
         try {
           await createUser(firebaseUser.uid, {
             email: firebaseUser.email,
@@ -49,19 +34,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginWithGoogle = async () => {
-    if (!hasApiKey) {
-      const mockUser = {
-        uid: 'demo-12345',
-        email: 'student@demo.app',
-        displayName: 'Demo Student',
-        photoURL: '',
-        plan: 'free'
-      };
-      setUser(mockUser);
-      localStorage.setItem('demo_user', 'true');
-      return mockUser;
-    }
-
     try {
       const result = await signInWithPopup(auth, googleProvider);
       return result.user;
@@ -72,12 +44,6 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    if (!hasApiKey) {
-      setUser(null);
-      localStorage.removeItem('demo_user');
-      return;
-    }
-
     try {
       await signOut(auth);
     } catch (error) {
