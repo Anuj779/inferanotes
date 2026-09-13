@@ -6,6 +6,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import NotesDisplay from "@/components/NotesDisplay";
+import VideoChat from "@/components/VideoChat";
 export default function NotePage({ params }) {
   const { id } = use(params);
   const { user, loading, api } = useAuth();
@@ -72,7 +73,8 @@ export default function NotePage({ params }) {
               videoTitle={note.videoTitle}
               videoUrl={note.videoUrl}
             />
-            <p className="form-hint print-hide">
+            <VideoChat noteId={id} />
+            <p className="form-hint print-hide" style={{ marginTop: "24px" }}>
               AI notes can contain errors. Check important details against the
               lecture. Use Save PDF and choose “Save as PDF” in the print
               dialog.
