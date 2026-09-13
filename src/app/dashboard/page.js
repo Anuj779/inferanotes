@@ -2,10 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getNotes, saveNote, migrateNotes } from "@/lib/idb";
 import { ArrowUpRight, Search, FileText, LoaderCircle, Sparkles, Image as ImageIcon } from "lucide-react";
 import YoutubeGuideSvg from "@/components/YoutubeGuideSvg";
-import TutorialAnimation from "@/components/TutorialAnimation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
