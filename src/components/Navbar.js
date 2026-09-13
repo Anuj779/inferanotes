@@ -6,6 +6,16 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   return (
     <header className="site-header">
+      <div className="header-credit-bar">
+        Made by{" "}
+        <a
+          href="https://www.linkedin.com/in/anuj-ozare-38b579369?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Anuj
+        </a>
+      </div>
       <nav className="shell nav" aria-label="Main navigation">
         <Link href="/" className="wordmark">
           infera<span>notes</span>

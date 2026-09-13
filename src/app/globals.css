@@ -89,6 +89,24 @@ summary:focus-visible {
   border-bottom: 1px solid var(--border);
   background: var(--background);
 }
+.header-credit-bar {
+  text-align: center;
+  font-size: 12px;
+  padding: 6px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  letter-spacing: 0.2px;
+}
+.header-credit-bar a {
+  color: var(--foreground);
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.header-credit-bar a:hover {
+  color: var(--accent);
+}
 .nav {
   height: 80px;
   display: flex;
