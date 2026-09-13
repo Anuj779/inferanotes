@@ -63,6 +63,6 @@ test("quota rejects concurrency and exhausted daily allowance; resets next day",
     quotaDecision({ day: "2026-09-13", attempts: 9 }, now, 10).attempts,
     10,
   );
-  assert.equal(usageLimit("-5"), 10);
+  assert.equal(usageLimit("-5"), 100);
   assert.equal(usageLimit("20"), 20);
 });

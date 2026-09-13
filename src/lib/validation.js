@@ -48,7 +48,7 @@ export const languages = {
 };
 export function usageLimit(value) {
   const n = Number(value);
-  return Number.isInteger(n) && n > 0 && n <= 100 ? n : 10;
+  return Number.isInteger(n) && n > 0 && n <= 1000 ? n : 100;
 }
 export function quotaDecision(data, now, limit) {
   const day = new Date(now).toISOString().slice(0, 10);
