@@ -141,6 +141,9 @@ export default function DashboardPage() {
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={busy}
                 />
+                <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "4px", marginBottom: "12px", fontWeight: 500 }}>
+                  Note: Videos over ~2 hours may be blocked by YouTube, requiring you to manually paste the transcript.
+                </p>
                 <div className="form-grid">
                   <div>
                     <label htmlFor="language">Your language</label>
