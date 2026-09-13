@@ -62,7 +62,7 @@ export default function NotesDisplay({
           <div className="toolbar-actions">
             <button className="button secondary small" onClick={copy}>
               {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? "Copied" : "Copy notes"}
             </button>
             <button
               className="button secondary small"

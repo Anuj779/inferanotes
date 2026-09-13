@@ -14,7 +14,7 @@ export async function source(videoId, supplied) {
   }
   if (supplied) return { title, transcript: supplied };
   try {
-    const signal = AbortSignal.timeout(15000);
+    const signal = AbortSignal.timeout(60000);
     let milliseconds = false;
     const items = await YoutubeTranscript.fetchTranscript(videoId, {
       fetch: async (url, options) => {
@@ -43,6 +43,7 @@ export async function source(videoId, supplied) {
       );
     return { title, transcript };
   } catch (error) {
+    console.error("YoutubeTranscript failed:", error);
     if (error.code === "SOURCE_TOO_LONG" || error instanceof AppError) throw error;
     throw new AppError(
       "Captions could not be retrieved. Open YouTube’s transcript and paste it below to continue.",
