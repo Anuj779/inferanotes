@@ -66,14 +66,14 @@ export async function source(videoId, supplied) {
 
     if (error.message && error.message.includes("No transcripts are available")) {
       throw new AppError(
-        "This video does not have any captions or subtitles on YouTube. Please choose a video with captions or paste the transcript below.",
+        "This video does not have any captions or subtitles on YouTube.",
         422,
         "NO_CAPTIONS"
       );
     }
     
     throw new AppError(
-      "YouTube blocked the server from reading this transcript. You will need to paste the transcript manually below.",
+      "YouTube has blocked our servers from reading the transcript for this video. Please try another video.",
       422,
       "TRANSCRIPT_UNAVAILABLE",
     );
