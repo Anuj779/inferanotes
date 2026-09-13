@@ -2,13 +2,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  FileText,
-  Search,
-  Sparkles,
-  LoaderCircle,
-} from "lucide-react";
+import { getNotes, saveNote, migrateNotes } from "@/lib/idb";
+import { ArrowUpRight, Search, FileText, LoaderCircle, Sparkles } from "lucide-react";
+import TutorialAnimation from "@/components/TutorialAnimation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
@@ -210,6 +206,7 @@ export default function DashboardPage() {
                         <li>Highlight and copy all the text from the transcript window on the right.</li>
                         <li>Paste it into the box below.</li>
                       </ol>
+                      <TutorialAnimation />
                     </div>
                     <textarea
                       id="transcript"
