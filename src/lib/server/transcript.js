@@ -44,7 +44,26 @@ export async function source(videoId, supplied) {
     console.error("YoutubeTranscript failed:", error);
     if (error.code === "SOURCE_TOO_LONG" || error instanceof AppError) throw error;
     
-    // Check if the video literally has no captions
+    // Fallback to Render Engine if YouTube blocks us or there are no captions
+    console.log("Falling back to Render Transcription Engine for:", videoId);
+    try {
+      const renderRes = await fetch("https://inferanotes.onrender.com/api/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}` }),
+        signal: AbortSignal.timeout(170000) // 170 seconds
+      });
+      
+      const renderData = await renderRes.json();
+      
+      if (renderData.success && renderData.transcript) {
+        return { title, transcript: renderData.transcript };
+      }
+      console.error("Render Engine failed:", renderData.error);
+    } catch (renderError) {
+      console.error("Render Engine fetch failed:", renderError);
+    }
+
     if (error.message && error.message.includes("No transcripts are available")) {
       throw new AppError(
         "This video does not have any captions or subtitles on YouTube. Please choose a video with captions or paste the transcript below.",
