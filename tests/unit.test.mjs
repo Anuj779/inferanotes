@@ -37,7 +37,7 @@ test("rejects injected identity, unsupported languages and oversized sources", (
   for (const extra of [
     { uid: "victim" },
     { language: "invalid" },
-    { transcript: "x".repeat(90001) },
+    { transcript: "x".repeat(1000001) },
     { transcript: "short" },
   ])
     assert.equal(

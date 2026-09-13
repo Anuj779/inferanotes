@@ -35,7 +35,7 @@ export async function source(videoId, supplied) {
         return `[${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}] ${item.text}`;
       })
       .join("\n");
-    if (transcript.length > 90000)
+    if (transcript.length > 1000000)
       throw new AppError(
         "This lecture is too long. Paste a shorter transcript section below.",
         413,
@@ -43,7 +43,7 @@ export async function source(videoId, supplied) {
       );
     return { title, transcript };
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error.code === "SOURCE_TOO_LONG" || error instanceof AppError) throw error;
     throw new AppError(
       "Captions could not be retrieved. Open YouTube’s transcript and paste it below to continue.",
       422,

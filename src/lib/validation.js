@@ -37,7 +37,7 @@ export const generationSchema = z
     url: z.string().trim().min(1).max(2048),
     language: z.enum(["en", "hi", "hinglish", "mr"]).default("en"),
     detail: z.enum(["concise", "detailed"]).default("detailed"),
-    transcript: z.string().trim().min(100).max(90000).optional(),
+    transcript: z.string().trim().min(100).max(1000000).optional(),
   })
   .strict();
 export const languages = {

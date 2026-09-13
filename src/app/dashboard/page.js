@@ -185,12 +185,12 @@ export default function DashboardPage() {
                 {showTranscript && (
                   <div>
                     <label htmlFor="transcript">
-                      Transcript (100 to 90,000 characters)
+                      Transcript (100 to 1,000,000 characters)
                     </label>
                     <textarea
                       id="transcript"
                       minLength={100}
-                      maxLength={90000}
+                      maxLength={1000000}
                       rows={7}
                       value={transcript}
                       onChange={(e) => setTranscript(e.target.value)}

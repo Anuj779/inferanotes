@@ -26,7 +26,7 @@ export async function readJson(request, schema) {
   const parsed = schema.safeParse(body);
   if (!parsed.success)
     throw new AppError(
-      "Check the video URL, language, and transcript length (100 to 90,000 characters).",
+      "Check the video URL, language, and transcript length (100 to 1,000,000 characters).",
     );
   return parsed.data;
 }
