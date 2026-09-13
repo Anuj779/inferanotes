@@ -1,6 +1,7 @@
 import "server-only";
-import { YoutubeTranscript } from "youtube-transcript";
+import { YouTubeTranscriptApi } from "youtube-transcript-nodejs";
 import { AppError } from "../validation";
+
 export async function source(videoId, supplied) {
   let title = "YouTube study notes";
   try {
@@ -12,36 +13,35 @@ export async function source(videoId, supplied) {
   } catch {
     /* Metadata is optional. */
   }
+
   if (supplied) return { title, transcript: supplied };
+
   try {
-    const signal = AbortSignal.timeout(60000);
-    let milliseconds = false;
-    const items = await YoutubeTranscript.fetchTranscript(videoId, {
-      fetch: async (url, options) => {
-        const response = await fetch(url, { ...options, signal });
-        if (new URL(url).pathname.includes("timedtext"))
-          milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
-            await response.clone().text(),
-          );
-        return response;
-      },
-    });
-    if (!items.length) throw new Error("empty");
+    const { AutoPoTokenProvider } = await import("youtube-transcript-nodejs");
+    const api = new YouTubeTranscriptApi({ poTokenProvider: new AutoPoTokenProvider() });
+    const items = await api.fetch(videoId);
+    
+    if (!items || !items.length) throw new Error("empty");
+    
     const transcript = items
       .map((item) => {
-        const seconds = milliseconds ? item.offset / 1000 : item.offset;
+        const seconds = item.start;
         return `[${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}] ${item.text}`;
       })
       .join("\n");
-    if (transcript.length > 1000000)
+      
+    if (transcript.length > 1000000) {
       throw new AppError(
         "This lecture is too long. Paste a shorter transcript section below.",
         413,
         "SOURCE_TOO_LONG",
       );
+    }
+    
     return { title, transcript };
   } catch (error) {
-    console.error("YoutubeTranscript failed:", error);
+    console.error("YoutubeTranscript failed:", error.name, error.message);
+    
     if (error.code === "SOURCE_TOO_LONG" || error instanceof AppError) throw error;
     
     // Fallback to Render Engine if YouTube blocks us or there are no captions
@@ -64,11 +64,19 @@ export async function source(videoId, supplied) {
       console.error("Render Engine fetch failed:", renderError);
     }
 
-    if (error.message && error.message.includes("No transcripts are available")) {
+    if (error.name === "NoTranscriptFound" || error.name === "TranscriptsDisabled" || error.message?.includes("No transcripts")) {
       throw new AppError(
         "This video does not have any captions or subtitles on YouTube.",
         422,
         "NO_CAPTIONS"
+      );
+    }
+    
+    if (error.name === "VideoUnavailable") {
+      throw new AppError(
+        "This video is deleted, private, or unavailable. Please check the URL.",
+        422,
+        "VIDEO_UNAVAILABLE"
       );
     }
     
