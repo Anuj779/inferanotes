@@ -186,19 +186,32 @@ export default function DashboardPage() {
                   <ArrowUpRight size={14} />
                 </button>
                 {showTranscript && (
-                  <div>
-                    <label htmlFor="transcript">
-                      Transcript (100 to 1,000,000 characters)
-                    </label>
+                  <div style={{ background: "var(--surface-hover)", padding: "16px", borderRadius: "12px", marginTop: "12px", border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                      <label htmlFor="transcript" style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>
+                        Manual Transcript Fallback
+                      </label>
+                      {url && (
+                        <a 
+                          href={url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "#3b82f6", fontWeight: 600 }}
+                        >
+                          Step 1: Open video to copy transcript <ArrowUpRight size={14} />
+                        </a>
+                      )}
+                    </div>
                     <textarea
                       id="transcript"
                       minLength={100}
                       maxLength={1000000}
-                      rows={7}
+                      rows={6}
                       value={transcript}
                       onChange={(e) => setTranscript(e.target.value)}
                       disabled={busy}
-                      placeholder="Paste the transcript from YouTube here…"
+                      placeholder="Step 2: Paste the text you copied from YouTube here..."
+                      style={{ width: "100%", marginTop: "4px", borderRadius: "8px", border: "1px solid var(--border)", padding: "12px", background: "var(--background)", color: "var(--foreground)" }}
                     />
                   </div>
                 )}
