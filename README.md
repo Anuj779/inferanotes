@@ -1,209 +1,76 @@
-# 🔥 InferaNotes
+# InferaNotes
 
-> AI-powered platform that converts YouTube videos into structured, exam-ready study notes.
+Turn public YouTube lectures into private study notes in English, Hindi, Hinglish or Marathi. All features are free for now. There are no payments, subscriptions or paid tiers.
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-orange?logo=firebase)
-![Gemini](https://img.shields.io/badge/Gemini-AI-blue?logo=google)
-![Tailwind](https://img.shields.io/badge/Tailwind-CSS%20v4-38bdf8?logo=tailwindcss)
+## Run locally
 
----
+Use Node.js 22 or newer. Install with `npm ci`. Copy `.env.example` to `.env.local` and fill in your own configuration, then run `npm run dev`. The landing page builds without credentials; sign-in and generation require valid credentials.
 
-## ✨ Features
+## Backend and deployment
 
-- 🎯 **YouTube to Notes** — Paste any YouTube URL, get structured study notes
-- 🌍 **Multi-Language** — English, Hindi, Hinglish, Marathi
-- 📝 **Exam-Ready Format** — Headings, bullet points, key concepts, Q&A
-- 📄 **PDF Download** — Export notes as clean PDFs
-- 📋 **Copy to Clipboard** — One-click copy
-- 🔐 **Google Auth** — Secure login via Firebase
-- 📊 **Usage Tracking** — Free tier with 3 videos, upgradeable
-- 🌙 **Dark/Light Mode** — Toggle with smooth transitions
-- ⚡ **Blazing Fast** — Optimized API calls
+The backend is included in the Next.js application and deploys to the existing Vercel project along with the frontend. Firebase provides Google sign-in and Firestore persistence. A separate backend host is not needed.
 
----
+Set these variables in Vercel for Production and Preview, then redeploy:
 
-## 🚀 Getting Started
+| Variable | Source |
+| --- | --- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app config |
+| `FIREBASE_PROJECT_ID` | Firebase project |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin service account |
+| `FIREBASE_PRIVATE_KEY` | Service account private key; escaped newlines are supported |
+| `GEMINI_API_KEY` | Google AI Studio |
+| `GEMINI_MODEL` | Available free-tier model, default `gemini-3.5-flash-lite` |
+| `GROQ_API_KEY`, `GROQ_MODEL` | Optional short-transcript fallback |
+| `DAILY_GENERATION_LIMIT` | Optional, defaults to 10 attempts per user per UTC day |
 
-### Prerequisites
+Do not commit `.env.local` or service-account JSON. Do not prefix admin credentials or AI keys with `NEXT_PUBLIC_`.
 
-- Node.js 18+
-- npm
-- Firebase account
-- Google AI Studio account (for Gemini API)
+Enable Google sign-in in Firebase Authentication and authorize the actual Vercel production domain. Create Firestore, then deploy the supplied rules and indexes:
 
-### 1. Clone & Install
-
-```bash
-git clone https://github.com/your-username/inferanotes.git
-cd inferanotes
-npm install
+```sh
+npx firebase-tools login
+npx firebase-tools deploy --only firestore:rules,firestore:indexes --project YOUR_FIREBASE_PROJECT_ID
 ```
 
-### 2. Firebase Setup
+Wait for the notes index to finish building. Deploy the API and Firestore rules together: the old client SDK data access is replaced by server-only Admin SDK access. The new rules deny direct browser access to all database collections. Server code verifies Firebase ID tokens and checks ownership for every note. Existing note IDs and Firestore Timestamp values remain supported.
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project (e.g., "InferaNotes")
-3. **Enable Authentication:**
-   - Go to Authentication → Sign-in method
-   - Enable **Google** provider
-   - Add your domain to Authorized domains
-4. **Enable Firestore:**
-   - Go to Firestore Database → Create Database
-   - Start in **test mode** (configure security rules later)
-5. **Get Config:**
-   - Go to Project Settings → General
-   - Under "Your apps", click the Web app icon (</>)
-   - Register the app and copy the config values
+The existing GitHub integration can deploy pushes to `main` to Vercel. Alternatively, authenticate Vercel CLI, link the existing `inferanotes` project and run `vercel --prod`. Verify with a real Google login and one short captioned video after credentials and rules are configured.
 
-### 3. Gemini API Setup
+## Behavior
 
-1. Go to [Google AI Studio](https://aistudio.google.com/)
-2. Click "Get API Key"
-3. Create a new API key
-4. Copy the key
+- A single authenticated `POST /api/generate` validates the source, reserves an attempt transactionally, retrieves captions, generates directly in the selected language and saves notes.
+- Identical requests for an existing note return that note without consuming an attempt. One active generation per account. Failures count toward the daily attempt limit to limit retry abuse. Interrupted leases expire after four minutes.
+- Public caption extraction is best effort. Paste a transcript of 100 to 90,000 characters when extraction is blocked. Inputs are never silently truncated.
+- Notes use safe Markdown with raw HTML disabled. Timestamp links open the source lecture. Copy and Markdown downloads are available; Save PDF uses the browser print dialog and supports Indic scripts.
+- Notes are private, paginated and deletable. Search filters the notes loaded in the current notebook view.
+- Free provider capacity is shared across all users and can be exhausted. No paid fallback is enabled by this code. Keep provider accounts on free plans to avoid charges. Model availability must be verified in your provider account.
+- Transcripts are sent to the configured AI provider. Do not submit sensitive material. Automatic fallback, when enabled, sends the same content to Groq. Raw transcripts and video files are not persisted.
 
-### 4. Environment Variables
+## API
 
-Create a `.env.local` file in the project root:
+Send a Firebase ID token as `Authorization: Bearer <token>`. Client-supplied user IDs are never trusted.
 
-```bash
-cp .env.example .env.local
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/generate` | `{url, language, detail, transcript?}` -> `{noteId, cached}` |
+| `GET /api/notes?cursor=...` | Current user's paginated note metadata |
+| `GET /api/notes/:id` | Owned note |
+| `DELETE /api/notes/:id` | Delete owned note |
+| `GET /api/usage` | Current user's daily attempt allowance |
+
+The old public transcript, translation and usage-mutation endpoints are removed. `/pricing` redirects to the workspace for old bookmarks.
+
+## Verification
+
+```sh
+npm run lint
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Fill in your values:
-
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
-
-GEMINI_API_KEY=AIzaSy...
-```
-
-### 5. Run Locally
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📁 Project Structure
-
-```
-inferanotes/
-├── src/
-│   ├── app/
-│   │   ├── layout.js           # Root layout with providers
-│   │   ├── page.js             # Landing page
-│   │   ├── globals.css         # Design system & Tailwind
-│   │   ├── login/page.js       # Google login page
-│   │   ├── dashboard/page.js   # Main dashboard
-│   │   ├── notes/[id]/page.js  # Notes viewer
-│   │   ├── pricing/page.js     # Pricing page
-│   │   └── api/
-│   │       ├── validate/       # YouTube URL validation
-│   │       ├── transcript/     # Transcript extraction
-│   │       ├── generate/       # AI notes generation
-│   │       ├── translate/      # Multi-language translation
-│   │       └── usage/          # Usage tracking
-│   ├── components/             # 12 UI components
-│   ├── context/                # Auth & Theme providers
-│   └── lib/                    # Firebase, Firestore, Gemini
-├── .env.example
-└── package.json
-```
-
----
-
-## 🚢 Deploy to Vercel
-
-### Option 1: One-Click Deploy
-
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "New Project" → Import your repo
-4. Add environment variables in Vercel dashboard:
-   - All `NEXT_PUBLIC_FIREBASE_*` variables
-   - `GEMINI_API_KEY`
-5. Click "Deploy"
-
-### Option 2: Vercel CLI
-
-```bash
-npm i -g vercel
-vercel
-```
-
-### Post-Deployment
-
-- Add your Vercel domain to Firebase Auth → Authorized domains
-- Update Firestore security rules for production:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /usage/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null;
-    }
-    match /notes/{noteId} {
-      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null;
-    }
-  }
-}
-```
-
----
-
-## 📋 API Reference
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/validate` | POST | Validate YouTube URL, extract video ID |
-| `/api/transcript` | POST | Fetch video transcript |
-| `/api/generate` | POST | Generate AI notes from transcript |
-| `/api/translate` | POST | Translate notes to target language |
-| `/api/usage` | GET | Check usage count, fetch history |
-| `/api/usage` | POST | Increment usage counter |
-
----
-
-## 💰 Pricing Plans
-
-| Feature | Free | Starter (₹49/mo) | Pro (₹99/mo) |
-|---------|------|-------------------|---------------|
-| Videos | 3 total | 30/month | Unlimited |
-| Languages | English | All 4 | All 4 |
-| PDF Download | ❌ | ✅ | ✅ |
-| Q&A Generation | ❌ | ✅ | ✅ |
-| Priority Processing | ❌ | ❌ | ✅ |
-
-> **Note:** Payment integration is mock-only in the current MVP. No real transactions are processed.
-
----
-
-## ⚠️ Policy & Disclaimer
-
-InferaNotes processes only publicly available transcripts and does not store video content. We respect all copyright and content ownership policies. Only public YouTube videos with available captions/subtitles are supported.
-
----
-
-## 📜 License
-
-MIT License — Feel free to use and modify.
-
----
-
-Built with ❤️ for students everywhere.
+Browser checks use the production build and verify desktop/mobile layouts, language previews, redirects and unauthenticated API denial. Live Firebase login, database authorization and AI generation need the real service configuration and are not simulated by those checks.

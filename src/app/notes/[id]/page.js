@@ -1,111 +1,95 @@
-'use client';
-
-import { useState, useEffect, use } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import NotesDisplay from '@/components/NotesDisplay';
-import SkeletonLoader from '@/components/SkeletonLoader';
-import { ArrowLeft } from 'lucide-react';
-
-export default function NotesPage({ params }) {
-  const resolvedParams = use(params);
-  const { user, loading: authLoading } = useAuth();
+"use client";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import Navbar from "@/components/Navbar";
+import NotesDisplay from "@/components/NotesDisplay";
+export default function NotePage({ params }) {
+  const { id } = use(params);
+  const { user, loading, api } = useAuth();
   const router = useRouter();
   const [note, setNote] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
+  const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
+    if (!loading && !user) {
+      router.replace("/login");
       return;
     }
-
-    if (user && resolvedParams.id) {
-      fetchNote();
-    }
-  }, [user, authLoading, resolvedParams.id]);
-
-  const fetchNote = async () => {
+    if (!user) return;
+    let active = true;
+    api(`/api/notes/${encodeURIComponent(id)}`)
+      .then((data) => {
+        if (active) setNote(data.note);
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user, loading, router]);
+  const remove = async () => {
+    if (!window.confirm("Delete this note? This cannot be undone.")) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/usage?uid=${user.uid}&action=note&noteId=${resolvedParams.id}`);
-      const data = await res.json();
-
-      if (data.note) {
-        setNote(data.note);
-      } else {
-        setError('Note not found');
-      }
-    } catch (err) {
-      setError('Failed to load note');
-    } finally {
-      setLoading(false);
+      await api(`/api/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
+      router.replace("/dashboard");
+    } catch (e) {
+      setError(e.message);
+      setDeleting(false);
     }
   };
-
-  if (authLoading || loading) {
-    return (
-      <main className="min-h-screen">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-          <SkeletonLoader lines={8} />
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen page-enter">
+    <>
       <Navbar />
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          whileHover={{ x: -4 }}
-          onClick={() => router.push('/dashboard')}
-          className="flex items-center gap-2 mb-6 text-sm transition-colors cursor-pointer"
-          style={{ color: 'var(--muted)' }}
-          id="back-to-dashboard"
-        >
-          <ArrowLeft size={16} />
-          Back to Dashboard
-        </motion.button>
-
-        {error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card text-center py-12"
-          >
-            <p className="text-red-400 mb-4">{error}</p>
+      <main id="main" className="shell reader">
+        <div className="reader-nav">
+          <Link href="/dashboard" className="text-link">
+            <ArrowLeft size={16} />
+            Your notebook
+          </Link>
+          {note && (
             <button
-              onClick={() => router.push('/dashboard')}
-              className="btn-primary cursor-pointer"
+              className="icon-button"
+              aria-label="Delete note"
+              onClick={remove}
+              disabled={deleting}
             >
-              <span>Go to Dashboard</span>
+              <Trash2 size={17} />
             </button>
-          </motion.div>
-        ) : note ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card"
-          >
+          )}
+        </div>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+        {note ? (
+          <>
+            <p className="reader-label">{note.videoTitle}</p>
             <NotesDisplay
               notes={note.notes}
               videoTitle={note.videoTitle}
               videoUrl={note.videoUrl}
             />
-          </motion.div>
-        ) : null}
-      </div>
-
-      <Footer />
-    </main>
+            <p className="form-hint print-hide">
+              AI notes can contain errors. Check important details against the
+              lecture. Use Save PDF and choose “Save as PDF” in the print
+              dialog.
+            </p>
+          </>
+        ) : (
+          !error && (
+            <div className="skeleton" role="status">
+              Opening your notes…
+            </div>
+          )
+        )}
+      </main>
+    </>
   );
 }

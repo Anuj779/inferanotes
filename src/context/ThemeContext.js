@@ -1,34 +1,29 @@
-'use client';
-
-import { createContext, useContext, useEffect, useState } from 'react';
-
+"use client";
+import { createContext, useContext, useSyncExternalStore } from "react";
 const ThemeContext = createContext({});
-
+function subscribe(callback) {
+  window.addEventListener("theme-change", callback);
+  return () => window.removeEventListener("theme-change", callback);
+}
+function snapshot() {
+  return document.documentElement.dataset.theme || "dark";
+}
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('dark');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('inferanotes-theme');
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-  }, []);
-
+  const theme = useSyncExternalStore(subscribe, snapshot, () => "dark");
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('inferanotes-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("inferanotes-theme", next);
+    } catch {
+      /* Storage may be disabled. */
+    }
+    window.dispatchEvent(new Event("theme-change"));
   };
-
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
-
 export const useTheme = () => useContext(ThemeContext);

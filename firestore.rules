@@ -1,0 +1,7 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // API routes verify identity and ownership; Admin SDK handles persistence.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
