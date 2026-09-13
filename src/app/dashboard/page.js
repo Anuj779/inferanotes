@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getNotes, saveNote, migrateNotes } from "@/lib/idb";
-import { ArrowUpRight, Search, FileText, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowUpRight, Search, FileText, LoaderCircle, Sparkles, Image as ImageIcon } from "lucide-react";
+import YoutubeGuideSvg from "@/components/YoutubeGuideSvg";
 import TutorialAnimation from "@/components/TutorialAnimation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,6 +15,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [notes, setNotes] = useState([]);
   const [usage, setUsage] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
   const [cursor, setCursor] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
@@ -206,7 +208,20 @@ export default function DashboardPage() {
                         <li>Highlight and copy all the text from the transcript window on the right.</li>
                         <li>Paste it into the box below.</li>
                       </ol>
-                      <TutorialAnimation />
+                      
+                      <button 
+                        type="button" 
+                        onClick={() => setShowGuide(!showGuide)}
+                        style={{ background: "none", border: "none", color: "#3b82f6", cursor: "pointer", fontSize: "13px", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "4px", padding: 0, marginTop: "8px" }}
+                      >
+                        <ImageIcon size={14} /> {showGuide ? "Hide image guide" : "Show me an image guide"}
+                      </button>
+                      
+                      {showGuide && (
+                        <div style={{ marginTop: "12px", width: "100%" }}>
+                          <YoutubeGuideSvg />
+                        </div>
+                      )}
                     </div>
                     <textarea
                       id="transcript"
