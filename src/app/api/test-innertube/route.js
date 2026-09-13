@@ -13,7 +13,7 @@ export async function GET(request) {
         "User-Agent": "com.google.android.youtube/20.10.38 (Linux; U; Android 14)"
       },
       body: JSON.stringify({ 
-        context: { client: { clientName: 'ANDROID', clientVersion: '20.10.38' } }, 
+        context: { client: { clientName: 'IOS', clientVersion: '19.42.1' } }, 
         videoId 
       }) 
     });

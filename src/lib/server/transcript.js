@@ -16,18 +16,32 @@ export async function source(videoId, supplied) {
   try {
     const signal = AbortSignal.timeout(60000);
     let milliseconds = false;
-    const items = await YoutubeTranscript.fetchTranscript(videoId, {
-      fetch: async (url, options) => {
-        const response = await fetch(url, { ...options, signal });
-        // The package returns milliseconds for srv3 <p t="..."> captions,
-        // but seconds for legacy <text start="..."> captions. Read the format.
-        if (new URL(url).pathname.includes("timedtext"))
-          milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
-            await response.clone().text(),
-          );
-        return response;
-      },
-    });
+    let items;
+    try {
+      items = await YoutubeTranscript.fetchTranscript(videoId, {
+        fetch: async (url, options) => {
+          const response = await fetch(url, { ...options, signal });
+          if (new URL(url).pathname.includes("timedtext"))
+            milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
+              await response.clone().text(),
+            );
+          return response;
+        },
+      });
+    } catch (primaryError) {
+      console.warn("Primary fetch failed, retrying with proxy...", primaryError);
+      items = await YoutubeTranscript.fetchTranscript(videoId, {
+        fetch: async (url, options) => {
+          const proxiedUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+          const response = await fetch(proxiedUrl, { ...options, signal });
+          if (new URL(url).pathname.includes("timedtext"))
+            milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
+              await response.clone().text(),
+            );
+          return response;
+        },
+      });
+    }
     if (!items.length) throw new Error("empty");
     const transcript = items
       .map((item) => {
