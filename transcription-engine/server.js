@@ -5,13 +5,13 @@ const youtubedl = require("youtube-dl-exec");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const Groq = require("groq-sdk");
+const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.post("/api/transcribe", async (req, res) => {
   const { url } = req.body;
@@ -23,24 +23,34 @@ app.post("/api/transcribe", async (req, res) => {
   console.log(`[${id}] Starting processing for ${url}`);
 
   try {
-    // 1. Download audio at lowest possible bitrate to keep under 25MB Groq limit
+    // 1. Download audio at lowest possible bitrate
     console.log(`[${id}] Downloading audio...`);
     await youtubedl(url, {
       extractAudio: true,
       audioFormat: "m4a",
-      audioQuality: "9", // lowest quality to save space
+      audioQuality: "9", 
       output: audioPath,
       noPlaylist: true,
     });
 
     console.log(`[${id}] Audio downloaded. File size: ${fs.statSync(audioPath).size / (1024 * 1024)} MB`);
 
-    // 2. Transcribe using Groq Whisper API (whisper-large-v3)
-    console.log(`[${id}] Sending to Groq Whisper...`);
-    const transcription = await groq.audio.transcriptions.create({
-      file: fs.createReadStream(audioPath),
-      model: "whisper-large-v3",
-      response_format: "text",
+    // 2. Read audio file to Base64
+    const audioData = fs.readFileSync(audioPath).toString("base64");
+
+    // 3. Transcribe using Gemini 1.5 Flash
+    console.log(`[${id}] Sending to Gemini for transcription...`);
+    const result = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: "audio/mp4", data: audioData } },
+            { text: "Generate a perfectly accurate, verbatim transcript of this entire audio file. Do not summarize. Only output the spoken text." }
+          ]
+        }
+      ]
     });
 
     console.log(`[${id}] Transcription complete!`);
@@ -48,11 +58,11 @@ app.post("/api/transcribe", async (req, res) => {
     // Clean up file
     fs.unlinkSync(audioPath);
 
-    return res.json({ success: true, transcript: transcription });
+    return res.json({ success: true, transcript: result.text });
   } catch (error) {
     console.error(`[${id}] Error:`, error);
     if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
-    return res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message || error.toString() });
   }
 });
 

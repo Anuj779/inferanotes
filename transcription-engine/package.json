@@ -1,16 +1,16 @@
 {
   "name": "transcription-engine",
   "version": "1.0.0",
-  "description": "Heavy backend engine to bypass YouTube caption limits and transcribe audio via Whisper",
+  "description": "Heavy backend engine to bypass YouTube caption limits and transcribe audio via Gemini",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "@google/genai": "^0.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "groq-sdk": "^0.3.2",
     "youtube-dl-exec": "^3.0.7"
   }
 }
