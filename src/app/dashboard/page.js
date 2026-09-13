@@ -202,6 +202,15 @@ export default function DashboardPage() {
                         </a>
                       )}
                     </div>
+                    <div style={{ fontSize: "13px", color: "var(--foreground-muted)", marginBottom: "12px", lineHeight: "1.5", background: "var(--background)", padding: "10px", borderRadius: "8px", border: "1px dashed var(--border)" }}>
+                      <p style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "6px", marginTop: 0 }}>How to get the transcript:</p>
+                      <ol style={{ margin: 0, paddingLeft: "20px" }}>
+                        <li>Click the blue link above to open the video.</li>
+                        <li>Below the video description, click <strong>"...more"</strong>, then scroll down and click <strong>"Show transcript"</strong>.</li>
+                        <li>Highlight and copy all the text from the transcript window on the right.</li>
+                        <li>Paste it into the box below.</li>
+                      </ol>
+                    </div>
                     <textarea
                       id="transcript"
                       minLength={100}
