@@ -14,11 +14,7 @@ export default function NotePage({ params }) {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-      return;
-    }
-    if (!user) return;
+    if (loading) return;
     let active = true;
     api(`/api/notes/${encodeURIComponent(id)}`)
       .then((data) => {

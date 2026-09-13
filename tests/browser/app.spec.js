@@ -66,10 +66,16 @@ test("protected APIs reject missing tokens and legacy mutation endpoint is close
     404,
   );
 });
-test("dashboard requires login and old pricing redirects", async ({ page }) => {
-  await page.goto("/pricing");
-  await expect(page).toHaveURL(/\/login$/);
-  await expect(
-    page.getByRole("heading", { name: "Welcome to InferaNotes." }),
-  ).toBeVisible();
+test("workspace opens without login, including legacy links", async ({ page }) => {
+  for (const path of ["/dashboard", "/pricing", "/login"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByLabel("YouTube video link")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue with Google" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+  }
+  await page.getByLabel("YouTube video link").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  await page.getByRole("button", { name: "Create my notes" }).click();
+  await expect(page.locator("form").getByRole("alert")).toContainText("being configured");
+  await expect(page).toHaveURL(/\/dashboard$/);
 });

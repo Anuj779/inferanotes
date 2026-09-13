@@ -8,7 +8,7 @@ Use Node.js 22 or newer. Install with `npm ci`. Copy `.env.example` to `.env.loc
 
 ## Backend and deployment
 
-The backend is included in the Next.js application and deploys to the existing Vercel project along with the frontend. Firebase provides Google sign-in and Firestore persistence. A separate backend host is not needed.
+The backend is included in the Next.js application and deploys to the existing Vercel project along with the frontend. Firebase provides automatic anonymous guest sessions and Firestore persistence. There is no login screen. A separate backend host is not needed.
 
 Set these variables in Vercel for Production and Preview, then redeploy:
 
@@ -28,7 +28,7 @@ Set these variables in Vercel for Production and Preview, then redeploy:
 
 Do not commit `.env.local` or service-account JSON. Do not prefix admin credentials or AI keys with `NEXT_PUBLIC_`.
 
-Enable Google sign-in in Firebase Authentication and authorize the actual Vercel production domain. Create Firestore, then deploy the supplied rules and indexes:
+Enable the Anonymous provider in Firebase Authentication and authorize the actual Vercel production domain. Guest sessions start automatically when opening the workspace; no account or popup is required. Notes remain tied to that browser's persisted session: clearing site data or switching devices loses access. Existing authenticated sessions retain their notes. Daily limits are per guest identity, not per person, and can be bypassed by resetting browser data; Firebase's anonymous signup throttling is not a substitute for broader abuse controls. Create Firestore, then deploy the supplied rules and indexes:
 
 ```sh
 npx firebase-tools login
@@ -37,7 +37,7 @@ npx firebase-tools deploy --only firestore:rules,firestore:indexes --project YOU
 
 Wait for the notes index to finish building. Deploy the API and Firestore rules together: the old client SDK data access is replaced by server-only Admin SDK access. The new rules deny direct browser access to all database collections. Server code verifies Firebase ID tokens and checks ownership for every note. Existing note IDs and Firestore Timestamp values remain supported.
 
-The existing GitHub integration can deploy pushes to `main` to Vercel. Alternatively, authenticate Vercel CLI, link the existing `inferanotes` project and run `vercel --prod`. Verify with a real Google login and one short captioned video after credentials and rules are configured.
+The existing GitHub integration can deploy pushes to `main` to Vercel. Alternatively, authenticate Vercel CLI, link the existing `inferanotes` project and run `vercel --prod`. Verify one short captioned video in a guest workspace, reload to verify persistence, and check that a second browser cannot open the first browser's notes after credentials and rules are configured.
 
 ## Behavior
 
@@ -73,4 +73,4 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Browser checks use the production build and verify desktop/mobile layouts, language previews, redirects and unauthenticated API denial. Live Firebase login, database authorization and AI generation need the real service configuration and are not simulated by those checks.
+Browser checks use the production build and verify desktop/mobile layouts, language previews, direct workspace access, legacy redirects and unauthenticated API denial. Live Firebase guest sessions, database authorization and AI generation need the real service configuration and are not simulated by those checks.

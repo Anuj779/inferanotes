@@ -24,7 +24,7 @@ const faqs = [
   ],
   [
     "What happens to my data?",
-    "Your saved notes are private to your account. Transcripts are sent to the configured AI provider to generate notes; we do not store video files. Free AI providers may use submitted content to improve their services, so avoid sensitive material.",
+    "No sign-in needed. Your guest notebook is linked to this browser; clearing site data or switching devices loses access, so download important notes. Transcripts are sent to the configured AI provider; we do not store video files. Avoid sensitive material.",
   ],
 ];
 export default function HomePage() {

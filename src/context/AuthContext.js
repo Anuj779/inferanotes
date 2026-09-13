@@ -1,7 +1,17 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { clientAuth, googleProvider } from "@/lib/firebase";
+import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
+import { clientAuth } from "@/lib/firebase";
+let guestSession;
+async function ensureGuest() {
+  const auth = clientAuth();
+  if (!auth) throw new Error("Note generation is being configured. Please try again later.");
+  await auth.authStateReady();
+  if (auth.currentUser) return auth.currentUser;
+  guestSession ||= signInAnonymously(auth).then(result => result.user).finally(() => { guestSession = null; });
+  try { return await guestSession; }
+  catch { throw new Error("Could not start your guest workspace. Please try again later."); }
+}
 const AuthContext = createContext({});
 export function AuthProvider({ children }) {
   const [state, setState] = useState({
@@ -21,19 +31,8 @@ export function AuthProvider({ children }) {
       setState({ user, loading: false, configured: true }),
     );
   }, []);
-  const loginWithGoogle = async () => {
-    const auth = clientAuth();
-    if (!auth)
-      throw new Error("Sign-in is being configured. Please try again later.");
-    return (await signInWithPopup(auth, googleProvider)).user;
-  };
-  const logout = async () => {
-    const auth = clientAuth();
-    if (auth) await signOut(auth);
-  };
   const api = async (path, options = {}) => {
-    const user = clientAuth()?.currentUser;
-    if (!user) throw new Error("Please sign in to continue.");
+    const user = await ensureGuest();
     const res = await fetch(path, {
       ...options,
       headers: {
@@ -56,7 +55,7 @@ export function AuthProvider({ children }) {
     return data;
   };
   return (
-    <AuthContext.Provider value={{ ...state, loginWithGoogle, logout, api }}>
+    <AuthContext.Provider value={{ ...state, api }}>
       {children}
     </AuthContext.Provider>
   );

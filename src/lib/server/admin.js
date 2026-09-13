@@ -29,13 +29,13 @@ export async function requireUser(request) {
     request.headers.get("authorization") || "",
   )?.[1];
   if (!token)
-    throw new AppError("Sign in to continue.", 401, "UNAUTHENTICATED");
+    throw new AppError("A guest session is required. Refresh your workspace.", 401, "UNAUTHENTICATED");
   const { auth } = admin();
   try {
     return await auth.verifyIdToken(token, true);
   } catch {
     throw new AppError(
-      "Your session expired. Please sign in again.",
+      "Your guest session expired. Please refresh your workspace.",
       401,
       "UNAUTHENTICATED",
     );

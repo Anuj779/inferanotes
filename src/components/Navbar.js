@@ -1,10 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, ArrowUpRight, LogOut } from "lucide-react";
+import { Moon, Sun, ArrowUpRight } from "lucide-react";
 export default function Navbar() {
-  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   return (
     <header className="site-header">
@@ -25,19 +23,10 @@ export default function Navbar() {
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <Link href={user ? "/dashboard" : "/login"} className="button small">
-            {user ? "My workspace" : "Start studying"}
+          <Link href="/dashboard" className="button small">
+            Start studying
             <ArrowUpRight size={16} />
           </Link>
-          {user && (
-            <button
-              className="icon-button"
-              aria-label="Sign out"
-              onClick={logout}
-            >
-              <LogOut size={17} />
-            </button>
-          )}
         </div>
       </nav>
     </header>

@@ -30,11 +30,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-      return;
-    }
-    if (!user) return;
+    if (loading) return;
     let active = true;
     const load = async () => {
       try {
@@ -120,12 +116,12 @@ export default function DashboardPage() {
           <p>
             {user
               ? `Good to see you, ${user.displayName?.split(" ")[0] || "learner"}.`
-              : "Getting your workspace ready…"}
+              : "No sign-in needed. Start with a lecture below."}
             <br />
             What are we learning today?
           </p>
         </div>
-        {user && (
+        {(
           <>
             <div className="workspace-grid">
               <form className="generator" onSubmit={generate}>
@@ -237,7 +233,9 @@ export default function DashboardPage() {
                 </h3>
                 <p>
                   Use your time to understand the topic. Let us organize the
-                  notes.
+                  notes. Your guest notebook stays with this browser. Clearing
+                  site data or switching devices loses access; download notes
+                  you want to keep.
                 </p>
                 <div className="allowance">
                   <strong>
