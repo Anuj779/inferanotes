@@ -75,7 +75,7 @@ export default function DashboardPage() {
       router.push(`/notes/${result.noteId}`);
     } catch (e) {
       setError(e.message);
-      if (e.code === "TRANSCRIPT_UNAVAILABLE" || e.code === "SOURCE_TOO_LONG")
+      if (e.code === "TRANSCRIPT_UNAVAILABLE" || e.code === "SOURCE_TOO_LONG" || e.code === "NO_CAPTIONS")
         setShowTranscript(true);
     } finally {
       setBusy(false);

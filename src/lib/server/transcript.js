@@ -16,32 +16,16 @@ export async function source(videoId, supplied) {
   try {
     const signal = AbortSignal.timeout(60000);
     let milliseconds = false;
-    let items;
-    try {
-      items = await YoutubeTranscript.fetchTranscript(videoId, {
-        fetch: async (url, options) => {
-          const response = await fetch(url, { ...options, signal });
-          if (new URL(url).pathname.includes("timedtext"))
-            milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
-              await response.clone().text(),
-            );
-          return response;
-        },
-      });
-    } catch (primaryError) {
-      console.warn("Primary fetch failed, retrying with proxy...", primaryError);
-      items = await YoutubeTranscript.fetchTranscript(videoId, {
-        fetch: async (url, options) => {
-          const proxiedUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
-          const response = await fetch(proxiedUrl, { ...options, signal });
-          if (new URL(url).pathname.includes("timedtext"))
-            milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
-              await response.clone().text(),
-            );
-          return response;
-        },
-      });
-    }
+    const items = await YoutubeTranscript.fetchTranscript(videoId, {
+      fetch: async (url, options) => {
+        const response = await fetch(url, { ...options, signal });
+        if (new URL(url).pathname.includes("timedtext"))
+          milliseconds = /<p\s+t="\d+"\s+d="\d+"/.test(
+            await response.clone().text(),
+          );
+        return response;
+      },
+    });
     if (!items.length) throw new Error("empty");
     const transcript = items
       .map((item) => {
@@ -59,8 +43,18 @@ export async function source(videoId, supplied) {
   } catch (error) {
     console.error("YoutubeTranscript failed:", error);
     if (error.code === "SOURCE_TOO_LONG" || error instanceof AppError) throw error;
+    
+    // Check if the video literally has no captions
+    if (error.message && error.message.includes("No transcripts are available")) {
+      throw new AppError(
+        "This video does not have any captions or subtitles on YouTube. Please choose a video with captions or paste the transcript below.",
+        422,
+        "NO_CAPTIONS"
+      );
+    }
+    
     throw new AppError(
-      "Captions could not be retrieved. Open YouTube’s transcript and paste it below to continue.",
+      "YouTube blocked the server from reading this transcript. You will need to paste the transcript manually below.",
       422,
       "TRANSCRIPT_UNAVAILABLE",
     );
