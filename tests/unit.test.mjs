@@ -1,11 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import {
   videoIdFromUrl,
   generationSchema,
   quotaDecision,
   usageLimit,
 } from "../src/lib/validation.js";
+const require = createRequire(import.meta.url);
+test("Firebase Admin auth loads in a CommonJS server runtime", () => {
+  assert.doesNotThrow(() => require("firebase-admin/auth"));
+});
 test("accepts supported YouTube URLs and query parameter order", () => {
   for (const url of [
     "https://youtu.be/dQw4w9WgXcQ",
