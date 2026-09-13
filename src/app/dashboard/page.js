@@ -73,8 +73,6 @@ export default function DashboardPage() {
       router.push(`/notes/${result.noteId}`);
     } catch (e) {
       setError(e.message);
-      if (e.code === "TRANSCRIPT_UNAVAILABLE" || e.code === "SOURCE_TOO_LONG" || e.code === "NO_CAPTIONS")
-        setShowTranscript(true);
     } finally {
       setBusy(false);
       try {
@@ -171,77 +169,12 @@ export default function DashboardPage() {
                     </select>
                   </div>
                 </div>
-                <button
-                  className="text-link transcript-toggle"
-                  type="button"
-                  aria-expanded={showTranscript}
-                  onClick={() => setShowTranscript((v) => !v)}
-                >
-                  {" "}
-                  {showTranscript
-                    ? "Hide transcript input"
-                    : "Have a transcript? Paste it yourself"}{" "}
-                  <ArrowUpRight size={14} />
-                </button>
-                {showTranscript && (
-                  <div style={{ background: "var(--surface-hover)", padding: "16px", borderRadius: "12px", marginTop: "12px", border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                      <label htmlFor="transcript" style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>
-                        Manual Transcript Fallback
-                      </label>
-                      {url && (
-                        <a 
-                          href={url} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "#3b82f6", fontWeight: 600 }}
-                        >
-                          Step 1: Open video to copy transcript <ArrowUpRight size={14} />
-                        </a>
-                      )}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--foreground-muted)", marginBottom: "12px", lineHeight: "1.5", background: "var(--background)", padding: "10px", borderRadius: "8px", border: "1px dashed var(--border)" }}>
-                      <p style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "6px", marginTop: 0 }}>How to get the transcript:</p>
-                      <ol style={{ margin: 0, paddingLeft: "20px" }}>
-                        <li>Click the blue link above to open the video.</li>
-                        <li>Below the video description, click <strong>"...more"</strong>, then scroll down and click <strong>"Show transcript"</strong>.</li>
-                        <li>Highlight and copy all the text from the transcript window on the right.</li>
-                        <li>Paste it into the box below.</li>
-                      </ol>
-                      
-                      <button 
-                        type="button" 
-                        onClick={() => setShowGuide(!showGuide)}
-                        style={{ background: "none", border: "none", color: "#3b82f6", cursor: "pointer", fontSize: "13px", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "4px", padding: 0, marginTop: "8px" }}
-                      >
-                        <ImageIcon size={14} /> {showGuide ? "Hide image guide" : "Show me an image guide"}
-                      </button>
-                      
-                      {showGuide && (
-                        <div style={{ marginTop: "12px", width: "100%" }}>
-                          <YoutubeGuideSvg />
-                        </div>
-                      )}
-                    </div>
-                    <textarea
-                      id="transcript"
-                      minLength={100}
-                      maxLength={1000000}
-                      rows={6}
-                      value={transcript}
-                      onChange={(e) => setTranscript(e.target.value)}
-                      disabled={busy}
-                      placeholder="Step 2: Paste the text you copied from YouTube here..."
-                      style={{ width: "100%", marginTop: "4px", borderRadius: "8px", border: "1px solid var(--border)", padding: "12px", background: "var(--background)", color: "var(--foreground)" }}
-                    />
-                  </div>
-                )}
                 {error && (
                   <p className="error" role="alert">
                     {error}
                   </p>
                 )}
-                <button className="button full" disabled={busy} type="submit">
+                <button className="button full" disabled={busy || !url} type="submit">
                   {busy ? (
                     <>
                       <LoaderCircle className="spin" size={18} />
